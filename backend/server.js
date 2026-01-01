@@ -1,34 +1,42 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 const app = express();
 
+// =======================
 // Middleware
+// =======================
 app.use(cors());
 app.use(express.json());
 
 // =======================
-// MySQL Connection
+// MySQL Connection (Railway)
 // =======================
 const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  port:'3306',
-  database: 'ecommerce_db'
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
+  database: process.env.DB_NAME,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 db.connect(err => {
   if (err) {
-    console.error('Database connection failed:', err);
+    console.error('❌ Database connection failed:', err);
     return;
   }
-  console.log('MySQL Connected');
+  console.log('✅ MySQL Connected (Railway)');
 });
 
 // =======================
-// CHECKOUT API (MAIN)
+// CHECKOUT API
 // =======================
 app.post('/checkout', (req, res) => {
   const { full_name, phone, address, cart, total_price } = req.body;
@@ -46,7 +54,7 @@ app.post('/checkout', (req, res) => {
 
     const customer_id = customerResult.insertId;
 
-    // 2️⃣ Create order
+    // 2️⃣ Insert order
     const orderSql =
       'INSERT INTO orders (customer_id, total_price) VALUES (?, ?)';
 
@@ -102,6 +110,9 @@ app.get('/orders', (req, res) => {
 });
 
 // =======================
-app.listen(5000, () => {
-  console.log('Server running on http://localhost:5000');
+// Start Server
+// =======================
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
